@@ -1,10 +1,20 @@
--- // HIATUS MENU V2 - ESP LEGAL + ANIMATIONS // --
+--// HIATUS MENU V2 - CLEAN EDITION //--
+--// ESP LEGAL + FLY + SPEED | Creator: HIATUS //--
 
+-- =====================
+-- SERVICES
+-- =====================
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
--- Anti double load
+local LocalPlayer = Players.LocalPlayer
+
+-- =====================
+-- ANTI DOUBLE LOAD
+-- =====================
 if _G.HIATUS_FINAL then return end
 _G.HIATUS_FINAL = true
 
@@ -13,12 +23,27 @@ _G.HIATUS_FINAL = true
 -- =====================
 local KEY = "Freehiatus"
 local DISCORD_LINK = "https://discord.gg/5hZGrxP7uR"
-local LOGO_IMAGE = "rbxassetid://IMAGE_ID_HERE"
+
+-- 🔥 LOGO HIATUS (LÉZARD BLANC)
+local LOGO_IMAGE = "rbxassetid://LOGO_IMAGE_ID"
 
 local ESPEnabled = false
+local FlyEnabled = false
+local FlySpeed = 60
 
 -- =====================
--- ESP (Highlight - légal)
+-- TWEEN HELPER
+-- =====================
+local function Tween(obj, props, time)
+	TweenService:Create(
+		obj,
+		TweenInfo.new(time, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		props
+	):Play()
+end
+
+-- =====================
+-- ESP (LEGAL HIGHLIGHT)
 -- =====================
 local function EnableESP()
 	for _, plr in ipairs(Players:GetPlayers()) do
@@ -43,24 +68,51 @@ local function DisableESP()
 	end
 end
 
-Players.PlayerAdded:Connect(function(p)
-	p.CharacterAdded:Connect(function()
-		if ESPEnabled then
-			task.wait(0.4)
-			EnableESP()
-		end
-	end)
-end)
+-- =====================
+-- FLY SYSTEM
+-- =====================
+local BodyGyro, BodyVelocity, FlyConnection
 
--- =====================
--- TWEEN HELPER
--- =====================
-local function Tween(obj, props, time)
-	TweenService:Create(
-		obj,
-		TweenInfo.new(time, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		props
-	):Play()
+local function StartFly()
+	local char = LocalPlayer.Character
+	if not char then return end
+
+	local hrp = char:WaitForChild("HumanoidRootPart")
+	local hum = char:WaitForChild("Humanoid")
+	hum.PlatformStand = true
+
+	BodyGyro = Instance.new("BodyGyro", hrp)
+	BodyGyro.P = 9e4
+	BodyGyro.MaxTorque = Vector3.new(9e9,9e9,9e9)
+
+	BodyVelocity = Instance.new("BodyVelocity", hrp)
+	BodyVelocity.MaxForce = Vector3.new(9e9,9e9,9e9)
+
+	FlyConnection = RunService.RenderStepped:Connect(function()
+		local cam = workspace.CurrentCamera
+		BodyGyro.CFrame = cam.CFrame
+
+		local move = Vector3.zero
+		if UserInputService:IsKeyDown(Enum.KeyCode.W) then move += cam.CFrame.LookVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.S) then move -= cam.CFrame.LookVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.A) then move -= cam.CFrame.RightVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.D) then move += cam.CFrame.RightVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move += cam.CFrame.UpVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then move -= cam.CFrame.UpVector end
+
+		BodyVelocity.Velocity = move * FlySpeed
+	end)
+end
+
+local function StopFly()
+	if FlyConnection then FlyConnection:Disconnect() end
+	if BodyGyro then BodyGyro:Destroy() end
+	if BodyVelocity then BodyVelocity:Destroy() end
+
+	local char = LocalPlayer.Character
+	if char and char:FindFirstChild("Humanoid") then
+		char.Humanoid.PlatformStand = false
+	end
 end
 
 -- =====================
@@ -70,62 +122,51 @@ local KeyGui = Instance.new("ScreenGui", CoreGui)
 KeyGui.Name = "HiatusKeyGui"
 
 local KeyFrame = Instance.new("Frame", KeyGui)
-KeyFrame.Size = UDim2.new(0, 400, 0, 0)
-KeyFrame.Position = UDim2.new(0.5, -200, 0.5, -115)
+KeyFrame.Size = UDim2.new(0,420,0,0)
+KeyFrame.Position = UDim2.new(0.5,-210,0.5,-140)
 KeyFrame.BackgroundColor3 = Color3.fromRGB(10,10,10)
-KeyFrame.BorderSizePixel = 0
 KeyFrame.Active = true
 KeyFrame.Draggable = true
-Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 14)
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0,16)
 
-Tween(KeyFrame, {Size = UDim2.new(0,400,0,240)}, 0.4)
+Tween(KeyFrame,{Size=UDim2.new(0,420,0,300)},0.4)
 
+-- LOGO
 local Logo = Instance.new("ImageLabel", KeyFrame)
-Logo.Size = UDim2.new(0, 80, 0, 80)
-Logo.Position = UDim2.new(0.5, -40, 0, 10)
+Logo.Size = UDim2.new(0,90,0,90)
+Logo.Position = UDim2.new(0.5,-45,0,10)
 Logo.BackgroundTransparency = 1
 Logo.Image = LOGO_IMAGE
 
+-- TITLE
 local Title = Instance.new("TextLabel", KeyFrame)
 Title.Size = UDim2.new(1,0,0,40)
-Title.Position = UDim2.new(0,0,0,95)
+Title.Position = UDim2.new(0,0,0,110)
 Title.BackgroundTransparency = 1
 Title.Text = "HIATUS"
 Title.Font = Enum.Font.GothamBlack
-Title.TextSize = 26
-Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.TextSize = 28
+Title.TextColor3 = Color3.new(1,1,1)
 
+-- KEY BOX
 local KeyBox = Instance.new("TextBox", KeyFrame)
-KeyBox.Size = UDim2.new(0,260,0,38)
-KeyBox.Position = UDim2.new(0.5,-130,0,140)
+KeyBox.Size = UDim2.new(0,280,0,40)
+KeyBox.Position = UDim2.new(0.5,-140,0,165)
 KeyBox.PlaceholderText = "Enter Key"
 KeyBox.Text = ""
-KeyBox.ClearTextOnFocus = false
-KeyBox.Font = Enum.Font.Gotham
-KeyBox.TextSize = 15
-KeyBox.TextColor3 = Color3.fromRGB(255,255,255)
 KeyBox.BackgroundColor3 = Color3.fromRGB(20,20,20)
-Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0,8)
+KeyBox.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", KeyBox)
 
+-- VALIDATE
 local Validate = Instance.new("TextButton", KeyFrame)
-Validate.Size = UDim2.new(0,110,0,36)
-Validate.Position = UDim2.new(0.1,0,1,-45)
+Validate.Size = UDim2.new(0,140,0,38)
+Validate.Position = UDim2.new(0.5,-70,0,220)
 Validate.Text = "VALIDER"
-Validate.Font = Enum.Font.GothamBold
-Validate.TextSize = 14
-Validate.TextColor3 = Color3.fromRGB(255,255,255)
 Validate.BackgroundColor3 = Color3.fromRGB(30,30,30)
-Instance.new("UICorner", Validate).CornerRadius = UDim.new(0,8)
-
-local CloseKey = Instance.new("TextButton", KeyFrame)
-CloseKey.Size = UDim2.new(0,110,0,36)
-CloseKey.Position = UDim2.new(0.55,0,1,-45)
-CloseKey.Text = "FERMER"
-CloseKey.Font = Enum.Font.GothamBold
-CloseKey.TextSize = 14
-CloseKey.TextColor3 = Color3.fromRGB(255,255,255)
-CloseKey.BackgroundColor3 = Color3.fromRGB(90,0,0)
-Instance.new("UICorner", CloseKey).CornerRadius = UDim.new(0,8)
+Validate.TextColor3 = Color3.new(1,1,1)
+Validate.Font = Enum.Font.GothamBold
+Instance.new("UICorner", Validate)
 
 -- =====================
 -- MAIN MENU
@@ -136,81 +177,101 @@ local function OpenMenu()
 
 	local Frame = Instance.new("Frame", Gui)
 	Frame.Size = UDim2.new(0,420,0,0)
-	Frame.Position = UDim2.new(0.5,-210,0.5,-120)
+	Frame.Position = UDim2.new(0.5,-210,0.5,-160)
 	Frame.BackgroundColor3 = Color3.fromRGB(10,10,10)
-	Frame.BorderSizePixel = 0
 	Frame.Active = true
 	Frame.Draggable = true
 	Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,16)
 
-	Tween(Frame, {Size = UDim2.new(0,420,0,260)}, 0.4)
+	Tween(Frame,{Size=UDim2.new(0,420,0,360)},0.4)
 
+	-- TITLE
 	local Title = Instance.new("TextLabel", Frame)
-	Title.Size = UDim2.new(1,0,0,45)
+	Title.Size = UDim2.new(1,0,0,40)
+	Title.Text = "HIATUS MENU"
 	Title.BackgroundTransparency = 1
-	Title.Text = "HIATUS - ESP"
 	Title.Font = Enum.Font.GothamBlack
 	Title.TextSize = 24
-	Title.TextColor3 = Color3.fromRGB(255,255,255)
+	Title.TextColor3 = Color3.new(1,1,1)
 
+	-- ESP
 	local ESPBtn = Instance.new("TextButton", Frame)
-	ESPBtn.Size = UDim2.new(0,260,0,45)
-	ESPBtn.Position = UDim2.new(0.5,-130,0,65)
+	ESPBtn.Size = UDim2.new(0,280,0,42)
+	ESPBtn.Position = UDim2.new(0.5,-140,0,55)
 	ESPBtn.Text = "ESP : OFF"
-	ESPBtn.Font = Enum.Font.GothamBold
-	ESPBtn.TextSize = 16
-	ESPBtn.TextColor3 = Color3.fromRGB(255,255,255)
 	ESPBtn.BackgroundColor3 = Color3.fromRGB(25,25,25)
-	Instance.new("UICorner", ESPBtn).CornerRadius = UDim.new(0,10)
+	ESPBtn.TextColor3 = Color3.new(1,1,1)
+	ESPBtn.Font = Enum.Font.GothamBold
+	Instance.new("UICorner", ESPBtn)
 
 	ESPBtn.MouseButton1Click:Connect(function()
 		ESPEnabled = not ESPEnabled
-		ESPBtn.Text = "ESP : " .. (ESPEnabled and "ON" or "OFF")
+		ESPBtn.Text = "ESP : "..(ESPEnabled and "ON" or "OFF")
 		if ESPEnabled then EnableESP() else DisableESP() end
 	end)
 
-	-- DISCORD BUTTON
-	local DiscordBtn = Instance.new("TextButton", Frame)
-	DiscordBtn.Size = UDim2.new(0,260,0,38)
-	DiscordBtn.Position = UDim2.new(0.5,-130,0,125)
-	DiscordBtn.Text = "DISCORD"
-	DiscordBtn.Font = Enum.Font.GothamBold
-	DiscordBtn.TextSize = 15
-	DiscordBtn.TextColor3 = Color3.fromRGB(255,255,255)
-	DiscordBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-	Instance.new("UICorner", DiscordBtn).CornerRadius = UDim.new(0,8)
+	-- FLY
+	local FlyBtn = Instance.new("TextButton", Frame)
+	FlyBtn.Size = UDim2.new(0,280,0,42)
+	FlyBtn.Position = UDim2.new(0.5,-140,0,105)
+	FlyBtn.Text = "FLY : OFF"
+	FlyBtn.BackgroundColor3 = Color3.fromRGB(25,25,25)
+	FlyBtn.TextColor3 = Color3.new(1,1,1)
+	FlyBtn.Font = Enum.Font.GothamBold
+	Instance.new("UICorner", FlyBtn)
 
-	local DiscordLink = Instance.new("TextLabel", Frame)
-	DiscordLink.Size = UDim2.new(1,0,0,30)
-	DiscordLink.Position = UDim2.new(0,0,0,168)
-	DiscordLink.BackgroundTransparency = 1
-	DiscordLink.Text = DISCORD_LINK
-	DiscordLink.Font = Enum.Font.Gotham
-	DiscordLink.TextSize = 13
-	DiscordLink.TextColor3 = Color3.fromRGB(180,180,180)
-	DiscordLink.TextWrapped = true
+	FlyBtn.MouseButton1Click:Connect(function()
+		FlyEnabled = not FlyEnabled
+		FlyBtn.Text = "FLY : "..(FlyEnabled and "ON" or "OFF")
+		if FlyEnabled then StartFly() else StopFly() end
+	end)
 
-	DiscordBtn.MouseButton1Click:Connect(function()
-		print("HIATUS | Discord :", DISCORD_LINK)
-		if setclipboard then
-			setclipboard(DISCORD_LINK)
+	-- SPEED LABEL
+	local SpeedLabel = Instance.new("TextLabel", Frame)
+	SpeedLabel.Size = UDim2.new(1,0,0,30)
+	SpeedLabel.Position = UDim2.new(0,0,0,160)
+	SpeedLabel.Text = "Fly Speed : "..FlySpeed
+	SpeedLabel.BackgroundTransparency = 1
+	SpeedLabel.TextColor3 = Color3.new(1,1,1)
+
+	-- SPEED BOX
+	local SpeedBox = Instance.new("TextBox", Frame)
+	SpeedBox.Size = UDim2.new(0,120,0,34)
+	SpeedBox.Position = UDim2.new(0.5,-60,0,195)
+	SpeedBox.Text = tostring(FlySpeed)
+	SpeedBox.BackgroundColor3 = Color3.fromRGB(20,20,20)
+	SpeedBox.TextColor3 = Color3.new(1,1,1)
+	Instance.new("UICorner", SpeedBox)
+
+	SpeedBox.FocusLost:Connect(function()
+		local v = tonumber(SpeedBox.Text)
+		if v and v >= 10 and v <= 300 then
+			FlySpeed = v
+			SpeedLabel.Text = "Fly Speed : "..FlySpeed
 		end
 	end)
 
-	local Close = Instance.new("TextButton", Frame)
-	Close.Size = UDim2.new(0,120,0,34)
-	Close.Position = UDim2.new(0.5,-60,1,-42)
-	Close.Text = "FERMER"
-	Close.Font = Enum.Font.GothamBold
-	Close.TextSize = 14
-	Close.TextColor3 = Color3.fromRGB(255,255,255)
-	Close.BackgroundColor3 = Color3.fromRGB(90,0,0)
-	Instance.new("UICorner", Close).CornerRadius = UDim.new(0,8)
+	-- DISCORD
+	local DiscordBtn = Instance.new("TextButton", Frame)
+	DiscordBtn.Size = UDim2.new(0,280,0,36)
+	DiscordBtn.Position = UDim2.new(0.5,-140,0,245)
+	DiscordBtn.Text = "COPIER DISCORD"
+	DiscordBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	DiscordBtn.TextColor3 = Color3.new(1,1,1)
+	DiscordBtn.Font = Enum.Font.GothamBold
+	Instance.new("UICorner", DiscordBtn)
 
-	Close.MouseButton1Click:Connect(function()
-		Tween(Frame, {Size = UDim2.new(0,420,0,0)}, 0.3)
-		task.wait(0.3)
-		Gui:Destroy()
+	local DiscordText = Instance.new("TextLabel", Frame)
+	DiscordText.Size = UDim2.new(1,0,0,30)
+	DiscordText.Position = UDim2.new(0,0,0,285)
+	DiscordText.Text = DISCORD_LINK
+	DiscordText.BackgroundTransparency = 1
+	DiscordText.TextColor3 = Color3.fromRGB(180,180,180)
+	DiscordText.TextSize = 13
+	DiscordText.TextWrapped = true
+
+	DiscordBtn.MouseButton1Click:Connect(function()
+		if setclipboard then setclipboard(DISCORD_LINK) end
 	end)
 end
 
@@ -219,18 +280,10 @@ end
 -- =====================
 Validate.MouseButton1Click:Connect(function()
 	if KeyBox.Text == KEY then
-		Tween(KeyFrame, {Size = UDim2.new(0,400,0,0)}, 0.3)
-		task.wait(0.3)
 		KeyGui:Destroy()
 		OpenMenu()
 	else
 		KeyBox.Text = ""
 		KeyBox.PlaceholderText = "KEY INVALID"
 	end
-end)
-
-CloseKey.MouseButton1Click:Connect(function()
-	Tween(KeyFrame, {Size = UDim2.new(0,400,0,0)}, 0.3)
-	task.wait(0.3)
-	KeyGui:Destroy()
 end)
