@@ -1,52 +1,54 @@
---// HIATUS MENU V2 - CLEAN EDITION //-- 
---// ESP LEGAL + FLY + SPEED + TP | Creator: HIATUS //--
+--// HIATUS HUB - FULL SCRIPT CLEAN //
+--// ESP + FLY + SLIDER + TP | Creator: HIATUS //
 
 -- =====================
 -- SERVICES
 -- =====================
 local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
 
 -- =====================
 -- ANTI DOUBLE LOAD
 -- =====================
-if _G.HIATUS_FINAL then return end
-_G.HIATUS_FINAL = true
+if _G.HIATUS_HUB then return end
+_G.HIATUS_HUB = true
 
 -- =====================
 -- CONFIG
 -- =====================
 local KEY = "Freehiatus"
-local DISCORD_LINK = "https://discord.gg/5hZGrxP7uR"
-local LOGO_IMAGE = "rbxassetid://LOGO_IMAGE_ID"
+local DISCORD_LINK = "https://discord.gg/5J3AJvSG8s"
 
 local ESPEnabled = false
 local FlyEnabled = false
 local FlySpeed = 60
 
 -- =====================
--- TWEEN HELPER
+-- SOUND
 -- =====================
-local function Tween(obj, props, time)
-	TweenService:Create(obj, TweenInfo.new(time, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
+local function PlaySound(id)
+	local s = Instance.new("Sound", workspace)
+	s.SoundId = "rbxassetid://"..id
+	s.Volume = 0.6
+	s:Play()
+	game.Debris:AddItem(s,2)
 end
 
 -- =====================
--- ESP FUNCTIONS
+-- ESP
 -- =====================
 local function EnableESP()
-	for _, plr in ipairs(Players:GetPlayers()) do
+	for _,plr in pairs(Players:GetPlayers()) do
 		if plr.Character and not plr.Character:FindFirstChild("HIATUS_ESP") then
 			local h = Instance.new("Highlight")
 			h.Name = "HIATUS_ESP"
 			h.FillColor = Color3.fromRGB(255,0,0)
-			h.OutlineColor = Color3.fromRGB(255,255,255)
-			h.FillTransparency = 0.5
+			h.FillTransparency = 0.4
 			h.OutlineTransparency = 0
 			h.Parent = plr.Character
 		end
@@ -54,7 +56,7 @@ local function EnableESP()
 end
 
 local function DisableESP()
-	for _, plr in ipairs(Players:GetPlayers()) do
+	for _,plr in pairs(Players:GetPlayers()) do
 		if plr.Character then
 			local h = plr.Character:FindFirstChild("HIATUS_ESP")
 			if h then h:Destroy() end
@@ -63,24 +65,28 @@ local function DisableESP()
 end
 
 -- =====================
--- FLY SYSTEM
+-- FLY
 -- =====================
-local BodyGyro, BodyVelocity, FlyConnection
+local BodyGyro, BodyVelocity, FlyConn
+
 local function StartFly()
 	local char = LocalPlayer.Character
 	if not char then return end
 	local hrp = char:WaitForChild("HumanoidRootPart")
 	local hum = char:WaitForChild("Humanoid")
 	hum.PlatformStand = true
+
 	BodyGyro = Instance.new("BodyGyro", hrp)
-	BodyGyro.P = 9e4
 	BodyGyro.MaxTorque = Vector3.new(9e9,9e9,9e9)
+	BodyGyro.P = 9e4
+
 	BodyVelocity = Instance.new("BodyVelocity", hrp)
 	BodyVelocity.MaxForce = Vector3.new(9e9,9e9,9e9)
 
-	FlyConnection = RunService.RenderStepped:Connect(function()
+	FlyConn = RunService.RenderStepped:Connect(function()
 		local cam = workspace.CurrentCamera
 		BodyGyro.CFrame = cam.CFrame
+
 		local move = Vector3.zero
 		if UserInputService:IsKeyDown(Enum.KeyCode.W) then move += cam.CFrame.LookVector end
 		if UserInputService:IsKeyDown(Enum.KeyCode.S) then move -= cam.CFrame.LookVector end
@@ -88,230 +94,242 @@ local function StartFly()
 		if UserInputService:IsKeyDown(Enum.KeyCode.D) then move += cam.CFrame.RightVector end
 		if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move += cam.CFrame.UpVector end
 		if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then move -= cam.CFrame.UpVector end
+
 		BodyVelocity.Velocity = move * FlySpeed
 	end)
 end
 
 local function StopFly()
-	if FlyConnection then FlyConnection:Disconnect() end
+	if FlyConn then FlyConn:Disconnect() end
 	if BodyGyro then BodyGyro:Destroy() end
 	if BodyVelocity then BodyVelocity:Destroy() end
-	local char = LocalPlayer.Character
-	if char and char:FindFirstChild("Humanoid") then
-		char.Humanoid.PlatformStand = false
-	end
+	local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+	if hum then hum.PlatformStand = false end
 end
 
 -- =====================
--- KEY GUI
+-- GUI
 -- =====================
-local KeyGui = Instance.new("ScreenGui", CoreGui)
-KeyGui.Name = "HiatusKeyGui"
+local Gui = Instance.new("ScreenGui", CoreGui)
+Gui.Name = "HiatusHub"
 
-local KeyFrame = Instance.new("Frame", KeyGui)
-KeyFrame.Size = UDim2.new(0,420,0,0)
-KeyFrame.Position = UDim2.new(0.5,-210,0.5,-140)
+-- =====================
+-- WELCOME
+-- =====================
+local Welcome = Instance.new("TextLabel", Gui)
+Welcome.Size = UDim2.new(1,0,1,0)
+Welcome.BackgroundColor3 = Color3.fromRGB(0,0,0)
+Welcome.Text = "WELCOME HIATUS HUB"
+Welcome.Font = Enum.Font.GothamBlack
+Welcome.TextSize = 40
+Welcome.TextColor3 = Color3.fromRGB(140,0,255)
+
+TweenService:Create(Welcome,TweenInfo.new(1),{TextTransparency=1,BackgroundTransparency=1}):Play()
+task.delay(1.2,function() Welcome:Destroy() end)
+
+-- =====================
+-- KEY MENU
+-- =====================
+local KeyFrame = Instance.new("Frame", Gui)
+KeyFrame.Size = UDim2.new(0,420,0,300)
+KeyFrame.Position = UDim2.new(0.5,-210,0.5,-150)
 KeyFrame.BackgroundColor3 = Color3.fromRGB(10,10,10)
 KeyFrame.BackgroundTransparency = 0.2
 KeyFrame.Active = true
 KeyFrame.Draggable = true
-Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0,16)
-Tween(KeyFrame,{Size=UDim2.new(0,420,0,300)},0.4)
+Instance.new("UICorner",KeyFrame)
 
--- LOGO
-local Logo = Instance.new("ImageLabel", KeyFrame)
-Logo.Size = UDim2.new(0,90,0,90)
-Logo.Position = UDim2.new(0.5,-45,0,10)
-Logo.BackgroundTransparency = 1
-Logo.Image = LOGO_IMAGE
-
--- TITLE
 local Title = Instance.new("TextLabel", KeyFrame)
-Title.Size = UDim2.new(1,0,0,40)
-Title.Position = UDim2.new(0,0,0,110)
-Title.BackgroundTransparency = 1
+Title.Size = UDim2.new(1,0,0,50)
 Title.Text = "HIATUS"
+Title.TextColor3 = Color3.fromRGB(140,0,255)
 Title.Font = Enum.Font.GothamBlack
-Title.TextSize = 28
-Title.TextColor3 = Color3.fromRGB(128,0,255)
+Title.TextSize = 30
+Title.BackgroundTransparency = 1
 
--- KEY BOX
 local KeyBox = Instance.new("TextBox", KeyFrame)
 KeyBox.Size = UDim2.new(0,280,0,40)
-KeyBox.Position = UDim2.new(0.5,-140,0,165)
+KeyBox.Position = UDim2.new(0.5,-140,0,120)
 KeyBox.PlaceholderText = "Enter Key"
 KeyBox.BackgroundColor3 = Color3.fromRGB(20,20,20)
-KeyBox.TextColor3 = Color3.fromRGB(255,255,255)
-Instance.new("UICorner", KeyBox)
+KeyBox.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner",KeyBox)
 
--- VALIDATE
 local Validate = Instance.new("TextButton", KeyFrame)
 Validate.Size = UDim2.new(0,140,0,38)
-Validate.Position = UDim2.new(0.5,-70,0,220)
+Validate.Position = UDim2.new(0.5,-70,0,175)
 Validate.Text = "VALIDER"
-Validate.BackgroundColor3 = Color3.fromRGB(30,30,30)
-Validate.TextColor3 = Color3.fromRGB(255,255,255)
+Validate.BackgroundColor3 = Color3.fromRGB(40,0,90)
+Validate.TextColor3 = Color3.new(1,1,1)
 Validate.Font = Enum.Font.GothamBold
-Instance.new("UICorner", Validate)
+Instance.new("UICorner",Validate)
 
--- DISCORD BOUTON EN BAS
-local DiscordBtn = Instance.new("TextButton", KeyFrame)
-DiscordBtn.Size = UDim2.new(0,280,0,36)
-DiscordBtn.Position = UDim2.new(0.5,-140,0,260)
-DiscordBtn.Text = "COPIER DISCORD"
-DiscordBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-DiscordBtn.TextColor3 = Color3.fromRGB(255,255,255)
-DiscordBtn.Font = Enum.Font.GothamBold
-Instance.new("UICorner", DiscordBtn)
+local Discord = Instance.new("TextButton", KeyFrame)
+Discord.Size = UDim2.new(0,280,0,34)
+Discord.Position = UDim2.new(0.5,-140,0,225)
+Discord.Text = "COPIER DISCORD"
+Discord.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Discord.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner",Discord)
 
-DiscordBtn.MouseButton1Click:Connect(function()
+Discord.MouseButton1Click:Connect(function()
 	if setclipboard then setclipboard(DISCORD_LINK) end
+	PlaySound(12222216)
 end)
-
-local DiscordText = Instance.new("TextLabel", KeyFrame)
-DiscordText.Size = UDim2.new(1,0,0,30)
-DiscordText.Position = UDim2.new(0,0,0,295)
-DiscordText.Text = DISCORD_LINK
-DiscordText.BackgroundTransparency = 1
-DiscordText.TextColor3 = Color3.fromRGB(180,180,180)
-DiscordText.TextSize = 13
-DiscordText.TextWrapped = true
 
 -- =====================
 -- MAIN MENU
 -- =====================
-local function OpenMenu()
-	local Gui = Instance.new("ScreenGui", CoreGui)
-	Gui.Name = "HiatusMainGui"
+local Menu = Instance.new("Frame", Gui)
+Menu.Size = UDim2.new(0,420,0,360)
+Menu.Position = UDim2.new(0.5,-210,0.5,-180)
+Menu.BackgroundColor3 = Color3.fromRGB(10,10,10)
+Menu.BackgroundTransparency = 0.2
+Menu.Visible = false
+Menu.Active = true
+Menu.Draggable = true
+Instance.new("UICorner",Menu)
 
-	local Frame = Instance.new("Frame", Gui)
-	Frame.Size = UDim2.new(0,420,0,0)
-	Frame.Position = UDim2.new(0.5,-210,0.5,-180)
-	Frame.BackgroundColor3 = Color3.fromRGB(10,10,10)
-	Frame.BackgroundTransparency = 0.2
-	Frame.Active = true
-	Frame.Draggable = true
-	Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,16)
-	Tween(Frame,{Size=UDim2.new(0,420,0,400)},0.4)
+local MTitle = Instance.new("TextLabel", Menu)
+MTitle.Size = UDim2.new(1,0,0,40)
+MTitle.Text = "Hiatus Menu"
+MTitle.Font = Enum.Font.GothamBold
+MTitle.TextColor3 = Color3.fromRGB(140,0,255)
+MTitle.BackgroundTransparency = 1
 
-	-- TITRE MENU
-	local Title = Instance.new("TextLabel", Frame)
-	Title.Size = UDim2.new(1,0,0,40)
-	Title.Text = "HIATUS MENU"
-	Title.BackgroundTransparency = 1
-	Title.Font = Enum.Font.GothamBlack
-	Title.TextSize = 24
-	Title.TextColor3 = Color3.fromRGB(128,0,255)
+-- ESP
+local ESPBtn = Instance.new("TextButton", Menu)
+ESPBtn.Size = UDim2.new(0,280,0,36)
+ESPBtn.Position = UDim2.new(0.5,-140,0,55)
+ESPBtn.Text = "ESP : OFF"
+ESPBtn.BackgroundColor3 = Color3.fromRGB(25,25,25)
+ESPBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner",ESPBtn)
 
-	-- ESP BTN
-	local ESPBtn = Instance.new("TextButton", Frame)
-	ESPBtn.Size = UDim2.new(0,280,0,40)
-	ESPBtn.Position = UDim2.new(0.5,-140,0,55)
-	ESPBtn.Text = "ESP : OFF"
-	ESPBtn.BackgroundColor3 = Color3.fromRGB(25,25,25)
-	ESPBtn.TextColor3 = Color3.fromRGB(255,255,255)
-	ESPBtn.Font = Enum.Font.GothamBold
-	Instance.new("UICorner", ESPBtn)
-	ESPBtn.MouseButton1Click:Connect(function()
-		ESPEnabled = not ESPEnabled
-		ESPBtn.Text = "ESP : "..(ESPEnabled and "ON" or "OFF")
-		if ESPEnabled then EnableESP() else DisableESP() end
-	end)
+ESPBtn.MouseButton1Click:Connect(function()
+	ESPEnabled = not ESPEnabled
+	ESPBtn.Text = "ESP : "..(ESPEnabled and "ON" or "OFF")
+	if ESPEnabled then EnableESP() else DisableESP() end
+	PlaySound(12222124)
+end)
 
-	-- FLY BTN
-	local FlyBtn = Instance.new("TextButton", Frame)
-	FlyBtn.Size = UDim2.new(0,280,0,40)
-	FlyBtn.Position = UDim2.new(0.5,-140,0,105)
-	FlyBtn.Text = "FLY : OFF"
-	FlyBtn.BackgroundColor3 = Color3.fromRGB(25,25,25)
-	FlyBtn.TextColor3 = Color3.fromRGB(255,255,255)
-	FlyBtn.Font = Enum.Font.GothamBold
-	Instance.new("UICorner", FlyBtn)
-	FlyBtn.MouseButton1Click:Connect(function()
-		FlyEnabled = not FlyEnabled
-		FlyBtn.Text = "FLY : "..(FlyEnabled and "ON" or "OFF")
-		if FlyEnabled then StartFly() else StopFly() end
-	end)
+-- FLY
+local FlyBtn = Instance.new("TextButton", Menu)
+FlyBtn.Size = UDim2.new(0,280,0,36)
+FlyBtn.Position = UDim2.new(0.5,-140,0,100)
+FlyBtn.Text = "FLY : OFF"
+FlyBtn.BackgroundColor3 = Color3.fromRGB(25,25,25)
+FlyBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner",FlyBtn)
 
-	-- FLY SPEED
-	local SpeedLabel = Instance.new("TextLabel", Frame)
-	SpeedLabel.Size = UDim2.new(1,0,0,30)
-	SpeedLabel.Position = UDim2.new(0,0,0,160)
-	SpeedLabel.BackgroundTransparency = 1
-	SpeedLabel.Text = "Fly Speed : "..FlySpeed
-	SpeedLabel.TextColor3 = Color3.fromRGB(255,255,255)
+FlyBtn.MouseButton1Click:Connect(function()
+	FlyEnabled = not FlyEnabled
+	FlyBtn.Text = "FLY : "..(FlyEnabled and "ON" or "OFF")
+	if FlyEnabled then StartFly() else StopFly() end
+	PlaySound(12222124)
+end)
 
-	local SpeedBox = Instance.new("TextBox", Frame)
-	SpeedBox.Size = UDim2.new(0,120,0,34)
-	SpeedBox.Position = UDim2.new(0.5,-60,0,195)
-	SpeedBox.BackgroundColor3 = Color3.fromRGB(20,20,20)
-	SpeedBox.TextColor3 = Color3.fromRGB(255,255,255)
-	SpeedBox.Text = tostring(FlySpeed)
-	Instance.new("UICorner", SpeedBox)
-	SpeedBox.FocusLost:Connect(function()
-		local v = tonumber(SpeedBox.Text)
-		if v and v >= 10 and v <= 300 then
-			FlySpeed = v
-			SpeedLabel.Text = "Fly Speed : "..FlySpeed
-		end
-	end)
+-- SPEED TEXT
+local SpeedText = Instance.new("TextLabel", Menu)
+SpeedText.Size = UDim2.new(1,0,0,20)
+SpeedText.Position = UDim2.new(0,0,0,145)
+SpeedText.Text = "Fly Speed : "..FlySpeed
+SpeedText.BackgroundTransparency = 1
+SpeedText.TextColor3 = Color3.new(1,1,1)
 
-	-- TP JOUEUR
-	local YPos = 240
-	for _,plr in ipairs(Players:GetPlayers()) do
-		if plr ~= LocalPlayer then
-			local PlayerLabel = Instance.new("TextLabel", Frame)
-			PlayerLabel.Size = UDim2.new(0,180,0,28)
-			PlayerLabel.Position = UDim2.new(0,10,0,YPos)
-			PlayerLabel.BackgroundColor3 = Color3.fromRGB(30,30,30)
-			PlayerLabel.TextColor3 = Color3.fromRGB(255,255,255)
-			PlayerLabel.Text = plr.Name
-			PlayerLabel.Font = Enum.Font.GothamBold
-			Instance.new("UICorner", PlayerLabel)
+-- SLIDER
+local Bar = Instance.new("Frame", Menu)
+Bar.Size = UDim2.new(0,260,0,6)
+Bar.Position = UDim2.new(0.5,-130,0,170)
+Bar.BackgroundColor3 = Color3.fromRGB(40,40,40)
+Instance.new("UICorner",Bar)
 
-			local TPBtn = Instance.new("TextButton", Frame)
-			TPBtn.Size = UDim2.new(0,80,0,28)
-			TPBtn.Position = UDim2.new(0,200,0,YPos)
-			TPBtn.BackgroundColor3 = Color3.fromRGB(128,0,255)
-			TPBtn.TextColor3 = Color3.fromRGB(255,255,255)
-			TPBtn.Text = "TP"
-			TPBtn.Font = Enum.Font.GothamBold
-			Instance.new("UICorner", TPBtn)
-			TPBtn.MouseButton1Click:Connect(function()
-				local char = LocalPlayer.Character
-				local target = plr.Character
-				if char and target and target:FindFirstChild("HumanoidRootPart") then
-					char:SetPrimaryPartCFrame(target.HumanoidRootPart.CFrame + Vector3.new(0,3,0))
-				end
-			end)
+local Dot = Instance.new("Frame", Bar)
+Dot.Size = UDim2.new(0,14,0,14)
+Dot.Position = UDim2.new(FlySpeed/200,-7,0.5,-7)
+Dot.BackgroundColor3 = Color3.fromRGB(140,0,255)
+Dot.Active = true
+Instance.new("UICorner",Dot)
 
-			YPos += 35
-		end
+local DragSlider = false
+
+Dot.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 then
+		DragSlider = true
+		Menu.Draggable = false
 	end
+end)
 
-	-- PETIT CARRE H VIOLET
-	local MiniBtn = Instance.new("TextButton", Gui)
-	MiniBtn.Size = UDim2.new(0,40,0,40)
-	MiniBtn.Position = UDim2.new(0,50,0,50)
-	MiniBtn.BackgroundColor3 = Color3.fromRGB(50,0,128)
-	MiniBtn.Text = "H"
-	MiniBtn.TextColor3 = Color3.fromRGB(255,255,255)
-	MiniBtn.Font = Enum.Font.GothamBlack
-	Instance.new("UICorner", MiniBtn)
-	MiniBtn.Active = true
-	MiniBtn.Draggable = true
-	MiniBtn.MouseButton1Click:Connect(function()
-		Frame.Visible = not Frame.Visible
-	end)
+UserInputService.InputEnded:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 then
+		DragSlider = false
+		Menu.Draggable = true
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(i)
+	if DragSlider and i.UserInputType == Enum.UserInputType.MouseMovement then
+		local x = math.clamp(i.Position.X - Bar.AbsolutePosition.X,0,Bar.AbsoluteSize.X)
+		FlySpeed = math.floor(1 + (x/Bar.AbsoluteSize.X)*199)
+		Dot.Position = UDim2.new(0,x-7,0.5,-7)
+		SpeedText.Text = "Fly Speed : "..FlySpeed
+	end
+end)
+
+-- TP
+local Y = 210
+for _,plr in pairs(Players:GetPlayers()) do
+	if plr ~= LocalPlayer then
+		local L = Instance.new("TextLabel", Menu)
+		L.Size = UDim2.new(0,200,0,26)
+		L.Position = UDim2.new(0,20,0,Y)
+		L.Text = plr.Name
+		L.BackgroundColor3 = Color3.fromRGB(30,30,30)
+		L.TextColor3 = Color3.new(1,1,1)
+		Instance.new("UICorner",L)
+
+		local TP = Instance.new("TextButton", Menu)
+		TP.Size = UDim2.new(0,70,0,26)
+		TP.Position = UDim2.new(0,230,0,Y)
+		TP.Text = "TP"
+		TP.BackgroundColor3 = Color3.fromRGB(140,0,255)
+		TP.TextColor3 = Color3.new(1,1,1)
+		Instance.new("UICorner",TP)
+
+		TP.MouseButton1Click:Connect(function()
+			if LocalPlayer.Character and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+				LocalPlayer.Character:MoveTo(plr.Character.HumanoidRootPart.Position + Vector3.new(0,3,0))
+			end
+		end)
+
+		Y += 30
+	end
 end
 
--- =====================
+-- MINI H
+local Mini = Instance.new("TextButton", Gui)
+Mini.Size = UDim2.new(0,50,0,50)
+Mini.Position = UDim2.new(0,40,0.5,-25)
+Mini.Text = "H"
+Mini.Font = Enum.Font.GothamBlack
+Mini.TextSize = 26
+Mini.BackgroundColor3 = Color3.fromRGB(140,0,255)
+Mini.TextColor3 = Color3.new(1,1,1)
+Mini.Active = true
+Mini.Draggable = true
+Instance.new("UICorner",Mini)
+
+Mini.MouseButton1Click:Connect(function()
+	Menu.Visible = not Menu.Visible
+	PlaySound(12222216)
+end)
+
 -- VALIDATE KEY
--- =====================
 Validate.MouseButton1Click:Connect(function()
 	if KeyBox.Text == KEY then
-		KeyGui:Destroy()
-		OpenMenu()
+		KeyFrame:Destroy()
+		Menu.Visible = true
+		PlaySound(12222216)
 	else
 		KeyBox.Text = ""
 		KeyBox.PlaceholderText = "KEY INVALID"
